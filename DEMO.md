@@ -1,6 +1,6 @@
 # Lead walkthrough (10 minutes)
 
-Demo repo for the weekly page-performance agent. Goal: **sitemap in, config only, parallel jobs, artifacts that expire.**
+Demo repo for the weekly page-performance agent. Goal: **sitemap in, config only, parallel jobs, artifacts that expire.** Decision readout: [READOUT.md](READOUT.md).
 
 ## 1. What was wrong with #2874
 

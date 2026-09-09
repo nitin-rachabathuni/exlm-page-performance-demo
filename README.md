@@ -4,6 +4,9 @@ Config-driven Lighthouse pipeline for Experience League. **URLs come from the si
 
 This repo is a dummy you can run end-to-end for review. It is the intended replacement for [exlm#2874](https://github.com/adobe-experience-league/exlm/pull/2874), which hardcoded a single URL in `performance/urls.json` and audited sequentially.
 
+- **Lead readout (decisions, evidence, ask):** [READOUT.md](READOUT.md)
+- **Hands-on walkthrough:** [DEMO.md](DEMO.md)
+
 ## Why this shape
 
 Production `https://experienceleague.adobe.com/sitemap-index.xml` currently fans out to **20 child sitemaps**. English alone is ~35k `<loc>` entries. You cannot Lighthouse the full set weekly. The agent therefore:
