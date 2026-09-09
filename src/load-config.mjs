@@ -15,6 +15,8 @@ const DEFAULTS = {
   keepLastRuns: 5,
   fetchTimeoutMs: 30_000,
   maxSitemapBytes: 52_428_800,
+  allowedHosts: [],
+  sitemapConcurrency: 4,
 };
 
 function assertRegexList(list, label) {
@@ -58,6 +60,25 @@ export async function loadConfig(path) {
   if (!Number.isInteger(cfg.maxUrls) || cfg.maxUrls < 1) {
     throw new Error('maxUrls must be an integer >= 1');
   }
+  if (!Number.isInteger(cfg.concurrencyPerShard) || cfg.concurrencyPerShard < 1) {
+    throw new Error('concurrencyPerShard must be an integer >= 1');
+  }
+  if (!Number.isInteger(cfg.keepLastRuns) || cfg.keepLastRuns < 1) {
+    throw new Error('keepLastRuns must be an integer >= 1');
+  }
+  if (
+    !Number.isInteger(cfg.artifactRetentionDays) ||
+    cfg.artifactRetentionDays < 1 ||
+    cfg.artifactRetentionDays > 90
+  ) {
+    throw new Error('artifactRetentionDays must be an integer between 1 and 90');
+  }
+  if (!Number.isInteger(cfg.sitemapConcurrency) || cfg.sitemapConcurrency < 1) {
+    throw new Error('sitemapConcurrency must be an integer >= 1');
+  }
+  if (!Array.isArray(cfg.allowedHosts)) {
+    throw new Error('allowedHosts must be an array of hostnames');
+  }
   if (!['first', 'stride', 'random'].includes(cfg.select)) {
     throw new Error('select must be first, stride, or random');
   }
@@ -66,6 +87,12 @@ export async function loadConfig(path) {
   }
   if (!Array.isArray(cfg.formFactors) || cfg.formFactors.length === 0) {
     throw new Error('formFactors must be a non-empty array');
+  }
+  const allowedFactors = new Set(['mobile', 'desktop']);
+  for (const factor of cfg.formFactors) {
+    if (!allowedFactors.has(factor)) {
+      throw new Error(`Unsupported formFactor: ${factor}`);
+    }
   }
   assertRegexList(cfg.include, 'include');
   assertRegexList(cfg.exclude, 'exclude');

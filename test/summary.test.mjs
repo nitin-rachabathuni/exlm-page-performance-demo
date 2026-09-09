@@ -1,5 +1,9 @@
 import assert from 'node:assert/strict';
-import { describe, it } from 'node:test';
+import { mkdir, mkdtemp, writeFile, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { after, describe, it } from 'node:test';
+import { summarize } from '../src/summarize.mjs';
 import { buildSummaryMarkdown, mergeShardSummaries } from '../src/summary.mjs';
 
 describe('buildSummaryMarkdown', () => {
@@ -43,5 +47,27 @@ describe('mergeShardSummaries', () => {
       merged.rows.map((r) => r.url),
       ['a', 'b'],
     );
+  });
+});
+
+describe('summarize missing shards', () => {
+  let dir;
+
+  after(async () => {
+    if (dir) await rm(dir, { recursive: true, force: true });
+  });
+
+  it('fails when plan.json lists a shard with no summary', async () => {
+    dir = await mkdtemp(join(tmpdir(), 'perf-sum-'));
+    await mkdir(join(dir, 'shards', '0'), { recursive: true });
+    await writeFile(
+      join(dir, 'plan.json'),
+      JSON.stringify({ shardIndexes: [0, 1], urls: ['https://demo.example/a'] }),
+    );
+    await writeFile(
+      join(dir, 'shards', '0', 'summary.json'),
+      JSON.stringify({ shard: 0, rows: [{ url: 'https://demo.example/a', formFactor: 'mobile', status: 'ok' }] }),
+    );
+    await assert.rejects(() => summarize({ outDir: dir }), /missing shard summaries: 1/);
   });
 });

@@ -1,5 +1,6 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { reportSlug } from './paths.mjs';
 
 function lighthouseFlags(formFactor, constants) {
   if (formFactor === 'mobile') {
@@ -55,7 +56,7 @@ export async function createLighthouseSession() {
       const lhr = result.lhr;
       const html = Array.isArray(result.report) ? result.report[0] : result.report;
       const scoreFrac = lhr?.categories?.performance?.score;
-      const slug = `${url.replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 80)}-${formFactor}`;
+      const slug = reportSlug(url, formFactor);
       await mkdir(outDir, { recursive: true });
       const htmlPath = join(outDir, `${slug}.report.html`);
       await writeFile(htmlPath, html, 'utf8');

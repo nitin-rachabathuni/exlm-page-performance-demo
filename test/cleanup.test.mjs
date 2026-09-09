@@ -16,6 +16,29 @@ describe('artifactsToDelete', () => {
     assert.deepEqual(ids, [1, 2]);
   });
 
+  it('skips expired artifacts', () => {
+    const artifacts = [
+      {
+        id: 9,
+        name: 'page-performance-summary',
+        expired: true,
+        workflow_run: { id: 50 },
+        created_at: '2026-08-01T00:00:00Z',
+      },
+      {
+        id: 10,
+        name: 'page-performance-summary',
+        expired: false,
+        workflow_run: { id: 200 },
+        created_at: '2026-09-08T00:00:00Z',
+      },
+    ];
+    assert.deepEqual(
+      artifactsToDelete(artifacts, { prefix: 'page-performance-', keepLastRuns: 1 }).map((a) => a.id),
+      [],
+    );
+  });
+
   it('deletes nothing when keepLastRuns covers every run', () => {
     const artifacts = [
       { id: 3, name: 'page-performance-summary', workflow_run: { id: 200 }, created_at: '2026-09-08T00:00:00Z' },

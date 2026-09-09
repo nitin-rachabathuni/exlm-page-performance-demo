@@ -34,6 +34,8 @@ describe('loadConfig', () => {
     assert.equal(cfg.auditor, 'stub');
     assert.equal(cfg.artifactRetentionDays, 14);
     assert.equal(cfg.keepLastRuns, 5);
+    assert.equal(cfg.concurrencyPerShard, 1);
+    assert.deepEqual(cfg.allowedHosts, []);
   });
 
   it('rejects missing sitemapUrl', async () => {
@@ -58,5 +60,25 @@ describe('loadConfig', () => {
     const path = join(dir, 'performance.json');
     await writeFile(path, JSON.stringify({ sitemapUrl: 'https://example.com/sitemap.xml', shards: 0 }));
     await assert.rejects(() => loadConfig(path), /shards/);
+  });
+
+  it('rejects concurrencyPerShard below 1', async () => {
+    dir = await mkdtemp(join(tmpdir(), 'perf-cfg-'));
+    const path = join(dir, 'performance.json');
+    await writeFile(
+      path,
+      JSON.stringify({ sitemapUrl: 'https://example.com/sitemap.xml', concurrencyPerShard: 0 }),
+    );
+    await assert.rejects(() => loadConfig(path), /concurrencyPerShard/);
+  });
+
+  it('rejects keepLastRuns below 1', async () => {
+    dir = await mkdtemp(join(tmpdir(), 'perf-cfg-'));
+    const path = join(dir, 'performance.json');
+    await writeFile(
+      path,
+      JSON.stringify({ sitemapUrl: 'https://example.com/sitemap.xml', keepLastRuns: 0 }),
+    );
+    await assert.rejects(() => loadConfig(path), /keepLastRuns/);
   });
 });

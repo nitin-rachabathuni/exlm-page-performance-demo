@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { escapeHtml, reportSlug } from './paths.mjs';
 
 function numericFrom(url, formFactor, salt, min, max) {
   const hex = createHash('sha256').update(`${url}|${formFactor}|${salt}`).digest('hex').slice(0, 8);
@@ -15,16 +16,16 @@ export async function auditUrl({ url, formFactor, outDir }) {
   const tbtMs = Math.round(numericFrom(url, formFactor, 'tbt', 0, 250));
   const ttfbMs = Math.round(numericFrom(url, formFactor, 'ttfb', 40, 280));
   const totalByteWeight = Math.round(numericFrom(url, formFactor, 'bytes', 180_000, 900_000));
-  const slug = `${url.replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 80)}-${formFactor}`;
+  const slug = reportSlug(url, formFactor);
   await mkdir(outDir, { recursive: true });
   const htmlPath = join(outDir, `${slug}.report.html`);
   const html = `<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><title>Stub report ${formFactor}</title></head>
+<html lang="en"><head><meta charset="utf-8"><title>Stub report ${escapeHtml(formFactor)}</title></head>
 <body>
   <h1>Stub Lighthouse report</h1>
   <p>This demo auditor does not launch Chrome. Swap config.auditor to "lighthouse" for a real run.</p>
   <dl>
-    <dt>URL</dt><dd>${url}</dd>
+    <dt>URL</dt><dd>${escapeHtml(url)}</dd>
     <dt>Device</dt><dd>${formFactor}</dd>
     <dt>Score</dt><dd>${score}</dd>
     <dt>LCP (ms)</dt><dd>${lcpMs}</dd>

@@ -18,12 +18,29 @@ export async function summarize({
       const parsed = JSON.parse(await readFile(summaryPath, 'utf8'));
       shards.push(parsed);
     } catch {
-      // shard json url lists live alongside directories; skip files without summary
+      // shard url lists live alongside directories
     }
   }
   if (!shards.length) {
     throw new Error(`No shard summary.json files found under ${shardRoot}`);
   }
+
+  try {
+    const plan = JSON.parse(await readFile(join(dest, 'plan.json'), 'utf8'));
+    const expected = new Set((plan.shardIndexes || []).map(String));
+    const found = new Set(shards.map((s) => String(s.shard)));
+    const missing = [...expected].filter((id) => !found.has(id));
+    if (missing.length) {
+      throw new Error(`missing shard summaries: ${missing.join(', ')}`);
+    }
+  } catch (err) {
+    if (err.code === 'ENOENT') {
+      // local callers can summarize without a plan file
+    } else {
+      throw err;
+    }
+  }
+
   const generatedAt = new Date().toISOString();
   const { rows } = mergeShardSummaries(shards);
   const summaryMd = buildSummaryMarkdown(rows, generatedAt);

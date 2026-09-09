@@ -10,7 +10,7 @@ Production `https://experienceleague.adobe.com/sitemap-index.xml` currently fans
 
 1. Fetches the **sitemap index** and child urlsets in parallel.
 2. Reads **only `<url><loc>`** (ignores `xhtml:link` hreflang clones).
-3. Filters / samples from **`config/performance.json`**.
+3. Filters / samples from **`config/performance.json`** (the same `include` list also skips child sitemaps *before* download, so an English include does not pull the other 18 locale files).
 4. Splits the selected URLs into shards and audits shards **in parallel jobs**.
 5. Stores HTML + JSON as **workflow artifacts**, not git.
 6. Deletes old artifacts automatically (`retention-days` + keep-last-N).

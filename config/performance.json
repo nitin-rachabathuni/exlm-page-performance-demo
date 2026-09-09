@@ -15,5 +15,7 @@
   "artifactRetentionDays": 14,
   "keepLastRuns": 5,
   "fetchTimeoutMs": 30000,
-  "maxSitemapBytes": 52428800
+  "maxSitemapBytes": 52428800,
+  "allowedHosts": [],
+  "sitemapConcurrency": 4
 }

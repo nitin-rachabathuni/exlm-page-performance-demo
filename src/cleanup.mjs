@@ -3,7 +3,9 @@ import { loadConfig } from './load-config.mjs';
 import { isMainModule, repoRootFrom } from './paths.mjs';
 
 export function artifactsToDelete(artifacts, { prefix, keepLastRuns }) {
-  const relevant = artifacts.filter((a) => typeof a.name === 'string' && a.name.startsWith(prefix));
+  const relevant = artifacts.filter(
+    (a) => typeof a.name === 'string' && a.name.startsWith(prefix) && a.expired !== true,
+  );
   const byRun = new Map();
   for (const artifact of relevant) {
     const runId = artifact.workflow_run?.id;
@@ -67,7 +69,7 @@ export async function deleteArtifacts(artifacts, { repo, token }) {
       );
       console.log(`Deleted artifact ${artifact.id} (${artifact.name})`);
     } catch (err) {
-      if (/ 403 | 401 /.test(String(err.message))) {
+      if (/ 403 | 401 | 404 /.test(String(err.message))) {
         console.warn(`Skip delete ${artifact.id}: ${err.message}`);
         continue;
       }

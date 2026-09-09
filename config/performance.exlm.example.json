@@ -18,6 +18,8 @@
   "auditor": "lighthouse",
   "artifactRetentionDays": 45,
   "keepLastRuns": 8,
-  "fetchTimeoutMs": 30000,
-  "maxSitemapBytes": 52428800
+  "fetchTimeoutMs": 120000,
+  "maxSitemapBytes": 52428800,
+  "allowedHosts": ["experienceleague.adobe.com"],
+  "sitemapConcurrency": 4
 }

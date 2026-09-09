@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -28,4 +29,17 @@ export async function mapLimit(items, limit, fn) {
 export function isMainModule(metaUrl, argv1) {
   if (!argv1) return false;
   return resolve(argv1) === fileURLToPath(metaUrl);
+}
+
+export function reportSlug(url, formFactor) {
+  const hash = createHash('sha256').update(url).digest('hex').slice(0, 12);
+  return `${formFactor}-${hash}`;
+}
+
+export function escapeHtml(text) {
+  return String(text)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 }
