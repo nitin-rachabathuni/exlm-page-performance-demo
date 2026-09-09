@@ -4,7 +4,7 @@ For the EXLM lead review. Hands-on walkthrough is [DEMO.md](DEMO.md). This note 
 
 **Dummy repo:** https://github.com/nitin-rachabathuni/exlm-page-performance-demo  
 **Green Actions run:** https://github.com/nitin-rachabathuni/exlm-page-performance-demo/actions/runs/34325407631  
-**Local path:** `exlm-page-performance-demo/` (sibling of `exlm/`)
+**EXLM PR:** https://github.com/adobe-experience-league/exlm/pull/2874 (`EXLM-5762`) — sitemap + config + parallel shards ported; URL set is `performance/config.json`.
 
 ---
 
