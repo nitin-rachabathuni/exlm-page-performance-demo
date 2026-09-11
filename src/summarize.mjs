@@ -25,6 +25,7 @@ export async function summarize({
     throw new Error(`No shard summary.json files found under ${shardRoot}`);
   }
 
+  let selectedByType = [];
   try {
     const plan = JSON.parse(await readFile(join(dest, 'plan.json'), 'utf8'));
     const expected = new Set((plan.shardIndexes || []).map(String));
@@ -33,6 +34,7 @@ export async function summarize({
     if (missing.length) {
       throw new Error(`missing shard summaries: ${missing.join(', ')}`);
     }
+    selectedByType = plan.selectedByType || [];
   } catch (err) {
     if (err.code === 'ENOENT') {
       // local callers can summarize without a plan file
@@ -43,7 +45,7 @@ export async function summarize({
 
   const generatedAt = new Date().toISOString();
   const { rows } = mergeShardSummaries(shards);
-  const summaryMd = buildSummaryMarkdown(rows, generatedAt);
+  const summaryMd = buildSummaryMarkdown(rows, generatedAt, selectedByType);
   const summaryJson = { generatedAt, rowCount: rows.length, rows };
   await writeFile(join(dest, 'summary.md'), summaryMd, 'utf8');
   await writeFile(join(dest, 'summary.json'), `${JSON.stringify(summaryJson, null, 2)}\n`, 'utf8');

@@ -13,6 +13,8 @@
     "performance:audit": "node src/audit.mjs",
     "performance:summarize": "node src/summarize.mjs",
     "performance:run": "node src/run-local.mjs",
+    "performance:live": "PERF_CONFIG=config/performance.exlm.example.json node src/run-local.mjs",
+    "performance:live:discover": "PERF_CONFIG=config/performance.exlm.example.json node src/discover.mjs",
     "performance:clean": "node src/cleanup-local.mjs"
   }
 }

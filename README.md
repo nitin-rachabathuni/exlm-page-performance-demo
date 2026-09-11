@@ -4,7 +4,7 @@ Config-driven Lighthouse pipeline for Experience League. **URLs come from the si
 
 This repo is a dummy you can run end-to-end for review. It is the intended replacement for [exlm#2874](https://github.com/adobe-experience-league/exlm/pull/2874), which hardcoded a single URL in `performance/urls.json` and audited sequentially.
 
-- **Lead readout (decisions, evidence, ask):** [READOUT.md](READOUT.md)
+- **Lead readout (storage, days, cleanup, parallel, ask):** [READOUT.md](READOUT.md)
 - **Hands-on walkthrough:** [DEMO.md](DEMO.md)
 
 ## Why this shape
@@ -13,7 +13,7 @@ Production `https://experienceleague.adobe.com/sitemap-index.xml` currently fans
 
 1. Fetches the **sitemap index** and child urlsets in parallel.
 2. Reads **only `<url><loc>`** (ignores `xhtml:link` hreflang clones).
-3. Filters / samples from **`config/performance.json`** (the same `include` list also skips child sitemaps *before* download, so an English include does not pull the other 18 locale files).
+3. Filters from **`config/performance.json`**: `include` also skips child sitemaps *before* download. **`select: onePerType`** then picks **one hub URL per page type** (docs, playlists, perspectives, …). The weekly cap is that unique-type count unless you set `maxUrls`.
 4. Splits the selected URLs into shards and audits shards **in parallel jobs**.
 5. Stores HTML + JSON as **workflow artifacts**, not git.
 6. Deletes old artifacts automatically (`retention-days` + keep-last-N).
@@ -28,8 +28,10 @@ Edit **one file**: [`config/performance.json`](config/performance.json).
 | --- | --- |
 | `sitemapUrl` | Sitemap or sitemap index. HTTP(S) or a path relative to repo root. |
 | `include` / `exclude` | Regex lists. Empty `include` = all locs. |
-| `maxUrls` | Hard cap after filters. |
-| `select` | `first`, `stride` (even sample), or `random` (`seed` makes it stable). |
+| `select` | **`onePerType`** (default for this demo): 1 URL per `pageTypes` entry. Also `first`, `stride`, or `random`. |
+| `pageTypes` | `{ id, match }` list. Adding a type is a config edit. Types with no sitemap hits are skipped. |
+| `withinType` | How to pick the 1 URL inside a type: **`hub`** (shortest path, e.g. `/en/docs` not a deep article), `first`, or `random`. |
+| `maxUrls` | Optional ceiling. Omit with `onePerType` and the cap is the number of unique types. |
 | `formFactors` | `mobile` and/or `desktop`. |
 | `query` | Query params added if missing. Default `martech=off`. |
 | `shards` | How many parallel GitHub jobs. |
@@ -38,7 +40,7 @@ Edit **one file**: [`config/performance.json`](config/performance.json).
 | `artifactRetentionDays` | GitHub auto-deletes artifacts after N days (max 90). |
 | `keepLastRuns` | Cleanup job deletes older `page-performance-*` artifacts beyond N runs. |
 
-EXLM-ready copy: [`config/performance.exlm.example.json`](config/performance.exlm.example.json) — production sitemap index, English include, stride sample of 20, 4 shards, real Lighthouse.
+EXLM-ready copy: [`config/performance.exlm.example.json`](config/performance.exlm.example.json) — production sitemap, English include, **one hub URL per page type** (docs, playlists, perspectives, …), 4 shards, real Lighthouse.
 
 ## How a run works
 
@@ -101,17 +103,17 @@ Discover / audit / summarize jobs are `contents: read` only. Cleanup is the only
 
 Do **not** keep `performance/urls.json`. Drop this `src/` + `config/` + workflow beside existing EXLM quality CI.
 
-1. Copy `src/`, `config/performance.exlm.example.json` → `config/performance.json`.
+1. Copy `src/`, `config/performance.exlm.example.json` → `performance/config.json`.
 2. Set `auditor` to `lighthouse` and `npm install lighthouse@^12 --no-save` in the audit job (same lean install as #2874).
-3. Start with `maxUrls: 20`, `shards: 4`, English include. Raise only after a green weekly run.
+3. Start with `select: onePerType` and the `pageTypes` list (one hub URL per template). Add a type in config, not code.
 4. Leave `query.martech: off`.
 5. Wire `src/*.test.mjs` into `npm test` / quality — #2874’s tests never ran in CI.
 
 ## Security / cost notes
 
 - Sitemap fetch has a **50 MB** cap (Google’s sitemap limit) and a timeout.
-- Child sitemaps are fetched in parallel; selected pages are capped by `maxUrls`.
-- Real Lighthouse on 20 URLs × 2 form factors ≈ 40 audits. 4 shards ≈ 10 audits/job. Budget ~15–25 minutes.
+- Child sitemaps are fetched in parallel; selected pages are capped by unique `pageTypes` (optional `maxUrls` ceiling).
+- Real Lighthouse on ~8 type hubs × 2 form factors ≈ 16 audits. 4 shards. Budget well under the old 20×2=40 plan.
 - No secrets. Do not commit `.env` or IMS tokens.
 
 ## License

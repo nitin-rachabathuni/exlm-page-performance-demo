@@ -34,6 +34,29 @@ describe('buildSummaryMarkdown', () => {
     assert.match(md, /91/);
     assert.match(md, /ERROR: timeout \/ line two/);
     assert.doesNotMatch(md, /timeout \|/);
+    assert.doesNotMatch(md, /\| Type \|/);
+  });
+
+  it('adds a Type column when selectedByType is present', () => {
+    const md = buildSummaryMarkdown(
+      [
+        {
+          url: 'https://demo.example/en/docs',
+          formFactor: 'mobile',
+          status: 'ok',
+          score: 90,
+          lcpMs: 1200,
+          cls: 0,
+          tbtMs: 10,
+          ttfbMs: 80,
+          totalByteWeight: 1000,
+        },
+      ],
+      '2026-09-09T00:00:00.000Z',
+      [{ id: 'docs', url: 'https://demo.example/en/docs' }],
+    );
+    assert.match(md, /\| Type \| URL \|/);
+    assert.match(md, /\| docs \| https:\/\/demo\.example\/en\/docs \|/);
   });
 });
 

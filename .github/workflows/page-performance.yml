@@ -2,11 +2,20 @@ name: Page performance
 
 on:
   workflow_dispatch:
+    inputs:
+      source:
+        description: Sitemap to use
+        type: choice
+        default: production
+        options:
+          - production
+          - fixture
   schedule:
     - cron: '0 8 * * 1'
   push:
     paths:
       - 'config/performance.json'
+      - 'config/performance.exlm.example.json'
       - 'src/**'
       - 'fixtures/**'
       - '.github/workflows/page-performance.yml'
@@ -18,11 +27,14 @@ concurrency:
 permissions:
   contents: read
 
+env:
+  PERF_CONFIG: ${{ github.event_name == 'push' && 'config/performance.json' || (github.event.inputs.source == 'fixture' && 'config/performance.json' || 'config/performance.exlm.example.json') }}
+
 jobs:
   discover:
     name: Discover URLs from sitemap
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     outputs:
       shards: ${{ steps.plan.outputs.shards }}
       retention: ${{ steps.plan.outputs.retention }}
@@ -38,6 +50,8 @@ jobs:
         run: |
           echo "shards=$(jq -c '.shardIndexes' performance-reports/plan.json)" >> "$GITHUB_OUTPUT"
           echo "retention=$(jq -r '.artifactRetentionDays' performance-reports/plan.json)" >> "$GITHUB_OUTPUT"
+          echo "Selected $(jq -r '.urlCount' performance-reports/plan.json) URLs from $(jq -r '.discoveredCount' performance-reports/plan.json) sitemap locs"
+          jq -r '.selectedByType[]? | "\(.id)\t\(.url)"' performance-reports/plan.json || true
       - uses: actions/upload-artifact@v4
         with:
           name: page-performance-plan
@@ -49,7 +63,7 @@ jobs:
     name: Audit shard ${{ matrix.shard }}
     needs: discover
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:
@@ -59,9 +73,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Install Chrome
+        id: chrome
+        if: github.event_name != 'push' && github.event.inputs.source != 'fixture'
+        uses: browser-actions/setup-chrome@v2
       - name: Install Lighthouse when configured
         run: |
-          if [ "$(jq -r '.auditor' config/performance.json)" = "lighthouse" ]; then
+          if [ "$(jq -r '.auditor' "${PERF_CONFIG}")" = "lighthouse" ]; then
             npm install lighthouse@^12 --no-save
           fi
       - uses: actions/download-artifact@v4
@@ -71,6 +89,7 @@ jobs:
       - name: Audit
         env:
           SHARD_INDEX: ${{ matrix.shard }}
+          CHROME_PATH: ${{ steps.chrome.outputs.chrome-path }}
         run: node src/audit.mjs
       - uses: actions/upload-artifact@v4
         with:

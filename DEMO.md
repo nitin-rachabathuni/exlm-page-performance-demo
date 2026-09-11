@@ -1,6 +1,6 @@
 # Lead walkthrough (10 minutes)
 
-Demo repo for the weekly page-performance agent. Goal: **sitemap in, config only, parallel jobs, artifacts that expire.** Decision readout: [READOUT.md](READOUT.md).
+Demo repo for the weekly page-performance agent. Goal: **sitemap in, config only, parallel jobs, artifacts that expire.** Decision + FAQ (storage, days, cleanup, parallel): [READOUT.md](READOUT.md).
 
 ## 1. What was wrong with #2874
 
@@ -16,17 +16,31 @@ Production sitemap index: `https://experienceleague.adobe.com/sitemap-index.xml`
 
 [`config/performance.json`](config/performance.json)
 
-Point at the fixture sitemap index. `exclude: ["/search"]` drops one loc without touching scripts. `shards: 3` is the parallel knob.
+Point at the fixture sitemap index. `pageTypes` is the unique-type list (1 hub URL each). `exclude: ["/search"]` drops search. `shards: 3` is the parallel knob.
 
 The EXLM-shaped copy is [`config/performance.exlm.example.json`](config/performance.exlm.example.json).
 
-## 3. Run it locally (stub auditor, no Chrome)
+## 3. Run it locally (fixture sitemap, stub auditor, no Chrome)
 
 ```bash
 npm test
 npm run performance:run
-ls -R performance-reports
 ```
+
+## 3b. Demo the **real** Experience League sitemap
+
+Unit tests stay on the tiny fixture. The live demo hits production:
+
+```bash
+npm run performance:live:discover   # fetch sitemap-index, pick 1 hub URL per type
+```
+
+Then either:
+
+- **GitHub (best for the lead):** Actions → **Page performance** → **Run workflow** → source **production**. That installs Chrome + Lighthouse, writes real HTML reports as artifacts.
+- **Local Lighthouse** (needs Chrome): `npm install lighthouse@^12 --no-save && npm run performance:live`
+
+`PERF_CONFIG=config/performance.exlm.example.json` is what both of those use. Push CI still uses the fixture so `npm test` stays seconds.
 
 You should see:
 

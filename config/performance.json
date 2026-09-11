@@ -2,8 +2,18 @@
   "sitemapUrl": "./fixtures/sitemap-index.xml",
   "include": [],
   "exclude": ["/search"],
-  "maxUrls": 6,
-  "select": "first",
+  "select": "onePerType",
+  "withinType": "hub",
+  "pageTypes": [
+    { "id": "home", "match": "/en/?$|/en/home(/|$)" },
+    { "id": "browse", "match": "/en/browse(/|$)" },
+    { "id": "events", "match": "/en/events(/|$)" },
+    { "id": "playlists", "match": "/en/playlists(/|$)" },
+    { "id": "perspectives", "match": "/en/perspectives(/|$)" },
+    { "id": "courses", "match": "/en/courses(/|$)" },
+    { "id": "certification", "match": "/en/certification" },
+    { "id": "docs", "match": "/en/docs(/|$)" }
+  ],
   "seed": 1,
   "formFactors": ["mobile", "desktop"],
   "query": {

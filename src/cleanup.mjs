@@ -1,6 +1,5 @@
-import { resolve } from 'node:path';
 import { loadConfig } from './load-config.mjs';
-import { isMainModule, repoRootFrom } from './paths.mjs';
+import { isMainModule, repoRootFrom, resolveConfigPath } from './paths.mjs';
 
 export function artifactsToDelete(artifacts, { prefix, keepLastRuns }) {
   const relevant = artifacts.filter(
@@ -94,7 +93,7 @@ export async function cleanupGitHubArtifacts({
 
 if (isMainModule(import.meta.url, process.argv[1])) {
   const repoRoot = repoRootFrom(import.meta.url);
-  const cfg = await loadConfig(resolve(repoRoot, 'config/performance.json'));
+  const cfg = await loadConfig(resolveConfigPath(undefined, repoRoot));
   cleanupGitHubArtifacts({
     repo: process.env.GITHUB_REPOSITORY,
     token: process.env.GITHUB_TOKEN,
